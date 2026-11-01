@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferidor - Teste Fase 0</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f172a;margin:0;padding:14px;line-height:1.4}
+  h1{font-size:1.15rem;margin:0 0 4px}
+  h3{font-size:.95rem;margin:14px 0 6px}
+  .aviso{font-size:.8rem;color:#64748b;margin:0 0 12px}
+  .card{background:#fff;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .erro{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
+  .erro-txt{color:#b91c1c;font-weight:700;margin-top:8px}
+  button{border:0;border-radius:8px;padding:10px 14px;font-weight:700;font-size:.9rem;background:#2563eb;color:#fff}
+  button.sec{background:#e2e8f0;color:#0f172a}
+  .linha{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .arq{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:.85rem}
+  .arq span{overflow-wrap:anywhere}
+  input{width:100%;padding:10px;border:2px solid #cbd5e1;border-radius:8px;font-size:.9rem;margin-top:6px}
+  pre{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;font-size:.72rem;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;margin:8px 0 0}
+  #log{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;max-height:240px;overflow:auto}
+  .l{padding:2px 0;border-bottom:1px dashed #e2e8f0}
+  .l.ok{color:#15803d}
+  .l.erro{color:#b91c1c}
+</style>
+</head>
+<body>
+
+<h1>Teste Fase 0 - login e XMLs</h1>
+<p class="aviso">Página de teste. Não faz parte do Conferidor.</p>
+
+<div id="cfg" class="card erro" style="display:none"></div>
+
+<div class="card" id="cartaoLogin">
+  <div id="btnGoogle"></div>
+  <div id="msgLogin"></div>
+</div>
+
+<div class="card" id="cartaoUsuario" style="display:none">
+  <div id="quem"></div>
+  <div class="linha">
+    <button id="btnListar">Listar XMLs</button>
+    <button id="btnSair" class="sec">Sair</button>
+  </div>
+  <div id="lista"></div>
+  <h3>Teste de negação</h3>
+  <div style="font-size:.8rem;color:#64748b">Cole o ID de um arquivo de OUTRA loja. O servidor deve negar.</div>
+  <input id="idManual" placeholder="ID do arquivo no Drive" autocomplete="off">
+  <div class="linha"><button id="btnLerId" class="sec">Ler por ID</button></div>
+  <pre id="visor" style="display:none"></pre>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Registro (envie uma captura se algo falhar)</h3>
+  <div id="log"></div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+// ===== Preencha estes dois valores =====
+const CLIENT_ID  = '626077896582-3n9nfv0vvme32qonv6gll3md44fhuams.apps.googleusercontent.com';
+const URL_BACKEND = 'https://script.google.com/macros/s/AKfycbzey0F2nL7EaqZ6F6q5nRqRYZQYevrGf4wYiJXarq1RTLItQJdNODtEra6YNQkreZiH/exec';
+// =======================================
+
+const $ = id => document.getElementById(id);
+const CHAVE = 'fase0_sessao';
+
+function guardar(t){ try{ localStorage.setItem(CHAVE,t); }catch(e){} }
+function lerSessao(){ try{ return localStorage.getItem(CHAVE)||''; }catch(e){ return ''; } }
+function limparSessao(){ try{ localStorage.removeItem(CHAVE); }catch(e){} }
+
+function log(msg, tipo){
+  const d = document.createElement('div');
+  d.className = 'l ' + (tipo||'');
+  d.textContent = new Date().toLocaleTimeString('pt-BR') + '  ' + msg;
+  $('log').prepend(d);
+}
+
+async function chamar(acao, dados){
+  const t0 = performance.now();
+  let resp;
+  try{
+    const r = await fetch(URL_BACKEND, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(Object.assign({acao: acao}, dados||{}))
+    });
+    resp = await r.json();
+  }catch(e){
+    resp = {ok:false, codigo:'rede', mensagem:'Falha ao falar com o servidor (' + e.message + '). Confira a URL e se a implantação está como "Qualquer pessoa".'};
+  }
+  resp.totalMs = Math.round(performance.now() - t0);
+  log(acao + ': ' + (resp.ok ? 'ok' : 'ERRO ' + (resp.codigo||'')) + ' - total ' + resp.totalMs + ' ms' +
+      (resp.servidorMs != null ? ' (servidor ' + resp.servidorMs + ' ms)' : ''), resp.ok ? 'ok' : 'erro');
+  return resp;
+}
+
+function mostrarLogin(msg){
+  $('cartaoUsuario').style.display = 'none';
+  $('cartaoLogin').style.display = 'block';
+  $('msgLogin').textContent = msg || '';
+  $('msgLogin').className = msg ? 'erro-txt' : '';
+}
+
+function mostrarUsuario(u){
+  $('cartaoLogin').style.display = 'none';
+  $('cartaoUsuario').style.display = 'block';
+  $('quem').textContent = 'Olá, ' + u.nome + ' - perfil: ' + (u.perfil === 'admin' ? 'administrador' : 'funcionário') +
+                          ' - ' + (u.perfil === 'admin' ? 'todas as lojas' : 'loja: ' + u.loja);
+  $('lista').textContent = '';
+  $('visor').style.display = 'none';
+}
+
+function sessaoInvalida(r){
+  if(r && r.codigo === 'sessao_invalida'){
+    limparSessao();
+    mostrarLogin(r.mensagem);
+    return true;
+  }
+  return false;
+}
+
+/* ---------- Login Google ---------- */
+let tentativasGoogle = 0;
+function iniciarGoogle(){
+  if(!(window.google && google.accounts && google.accounts.id)){
+    if(++tentativasGoogle < 40){ setTimeout(iniciarGoogle, 300); }
+    else { $('msgLogin').textContent = 'Não foi possível carregar o login do Google.'; $('msgLogin').className = 'erro-txt'; }
+    return;
+  }
+  google.accounts.id.initialize({client_id: CLIENT_ID, callback: aoReceberCredencial, auto_select: false});
+  google.accounts.id.renderButton($('btnGoogle'), {theme:'filled_blue', size:'large', text:'signin_with', shape:'pill', locale:'pt-BR'});
+}
+
+async function aoReceberCredencial(resp){
+  $('msgLogin').className = '';
+  $('msgLogin').textContent = 'Verificando...';
+  const r = await chamar('login', {idToken: resp.credential});
+  if(!r.ok){ mostrarLogin(r.mensagem || 'Acesso negado.'); return; }
+  guardar(r.sessao);
+  mostrarUsuario(r.usuario);
+}
+
+/* ---------- Ações ---------- */
+async function listar(){
+  const r = await chamar('listar', {sessao: lerSessao()});
+  if(sessaoInvalida(r)) return;
+  const box = $('lista');
+  box.textContent = '';
+  if(!r.ok){ box.textContent = r.mensagem || 'Erro.'; return; }
+  r.lojas.forEach(l => {
+    const h = document.createElement('h3');
+    h.textContent = l.loja + (l.erro ? ' - ' + l.erro : ' (' + l.arquivos.length + ' XML)');
+    box.appendChild(h);
+    (l.arquivos||[]).forEach(a => {
+      const row = document.createElement('div'); row.className = 'arq';
+      const n = document.createElement('span'); n.textContent = a.nome + ' - ' + Math.max(1, Math.round(a.tamanho/1024)) + ' KB';
+      const b = document.createElement('button'); b.textContent = 'Abrir'; b.onclick = () => abrir(a.id);
+      row.append(n, b); box.appendChild(row);
+    });
+  });
+}
+
+async function abrir(id){
+  const r = await chamar('ler', {sessao: lerSessao(), id: id});
+  if(sessaoInvalida(r)) return;
+  const v = $('visor');
+  v.style.display = 'block';
+  v.textContent = r.ok
+    ? r.nome + ' - ' + r.tamanho + ' bytes\n\n' + r.conteudo.slice(0, 700) + (r.conteudo.length > 700 ? '\n...' : '')
+    : 'NEGADO/ERRO: ' + (r.mensagem || r.codigo);
+}
+
+function sair(){
+  limparSessao();
+  try{ google.accounts.id.disableAutoSelect(); }catch(e){}
+  mostrarLogin('');
+  log('Saiu.');
+}
+
+/* ---------- Início ---------- */
+window.addEventListener('load', async () => {
+  log('Navegador: ' + navigator.userAgent);
+  if(CLIENT_ID.indexOf('COLE_AQUI') === 0 || URL_BACKEND.indexOf('COLE_AQUI') === 0){
+    $('cfg').style.display = 'block';
+    $('cfg').textContent = 'Falta preencher CLIENT_ID e URL_BACKEND no começo do script desta página.';
+    $('cartaoLogin').style.display = 'none';
+    return;
+  }
+  $('btnListar').onclick = listar;
+  $('btnSair').onclick = sair;
+  $('btnLerId').onclick = () => { const v = $('idManual').value.trim(); if(v) abrir(v); };
+  iniciarGoogle();
+  const s = lerSessao();
+  if(s){
+    const r = await chamar('eu', {sessao: s});
+    if(r.ok) mostrarUsuario(r.usuario); else sessaoInvalida(r);
+  }
+});
+</script>
+</body>
+</html>
