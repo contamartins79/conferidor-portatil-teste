@@ -15,6 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="Conferidor NF-e">
 <!-- Biblioteca do leitor de código de barras (versão fixa). Requer Wi-Fi na abertura. -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{--primary:#2563eb;--success:#16a34a;--warning:#ca8a04;--danger:#dc2626;--dark:#1e293b;--light:#f8fafc}
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -88,7 +89,7 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 .nf-resumo{font-size:.72rem;color:#64748b;margin-top:2px}
 #listaProdutos{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 2px 90px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #xmlInput{display:none}
-.botoes-acao{z-index:100;flex-wrap:wrap;padding:8px;gap:6px}.botoes-acao .btn{padding:10px 6px;font-size:.82rem;min-width:0}
+.botoes-acao{z-index:100;flex-wrap:wrap;padding:8px;gap:6px}.botoes-acao .btn{padding:10px 2px;font-size:.72rem;min-width:0;line-height:1.15;overflow-wrap:anywhere}
 .btn-secondary{background:#2563eb}
 .btn-warning{background:#ca8a04}
 #seletorNF{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:10000;align-items:flex-end;justify-content:center;padding:12px}
@@ -171,6 +172,33 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 .inicio-icone{filter:none}
 #statusScanner.lido{background:#fde047;color:#111827;font-weight:800;font-size:.95rem;line-height:1.25;border:2px solid #eab308;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;animation:pulsoLido .7s ease-out}
 @keyframes pulsoLido{0%{transform:scale(1.04);box-shadow:0 0 0 0 rgba(234,179,8,.75)}100%{transform:scale(1);box-shadow:0 0 0 10px rgba(234,179,8,0)}}
+
+.btn-nuvem{background:#0f766e}
+#modalXmls .modal-box{max-width:520px;max-height:90vh;display:flex;flex-direction:column}
+#modalXmls .modal-body{overflow:auto;text-align:left}
+#modalXmls .xmls-box{margin:0;border:0;padding:0}
+#modalXmls .xmls-titulo{display:none}
+.xmls-box{margin:16px auto 0;max-width:520px;text-align:left;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px}
+.xmls-titulo{font-weight:800;font-size:.9rem;color:#0f172a;margin-bottom:6px}
+.xmls-texto{font-size:.82rem;color:#475569;margin:6px 0;line-height:1.35}
+.xmls-erro{color:#b91c1c;font-weight:700}
+.xmls-google{margin-top:8px;min-height:44px}
+.xmls-topo{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.xmls-quem{font-size:.8rem;color:#334155;font-weight:700}
+.xmls-acoes{display:flex;gap:6px}
+.xmls-acoes button,.xmls-tentar{border:0;border-radius:7px;padding:7px 10px;font-weight:700;font-size:.78rem;background:#e2e8f0;color:#0f172a}
+.xmls-loja{font-size:.8rem;font-weight:800;color:#0f766e;margin:10px 0 2px}
+.xml-linha{border-top:1px solid #e2e8f0;padding:9px 0}
+.xml-topo{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.xml-nome{font-weight:800;font-size:.9rem;color:#0f172a}
+.xml-badge{font-size:.66rem;font-weight:800;padding:3px 7px;border-radius:10px;white-space:nowrap}
+.xml-badge.pend{background:#fef3c7;color:#92400e}
+.xml-badge.andamento{background:#dbeafe;color:#1d4ed8}
+.xml-badge.ok{background:#dcfce7;color:#166534}
+.xml-meta{font-size:.76rem;color:#64748b;margin-top:2px;overflow-wrap:anywhere}
+.xml-aviso{font-size:.72rem;color:#b45309;font-weight:700;margin-top:3px}
+.xml-btn{width:100%;margin-top:7px;border:0;border-radius:8px;padding:9px;font-weight:800;font-size:.85rem;background:#2563eb;color:#fff}
+.xml-btn:disabled{background:#cbd5e1;color:#64748b}
 </style>
 </head>
 <body>
@@ -182,7 +210,7 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 </div>
 
 <div id="resumo"></div>
-<div id="listaProdutos"><div class="status-vazio"><div class="inicio-icone"><img src="icon-192.png" alt="Conferidor NF-e" width="92" height="92" style="display:block;margin:0 auto"></div><div class="inicio-titulo">Conferidor NF-e Portátil</div><div class="inicio-sub">Importe seu arquivo XML pelo botão verde abaixo para começar.</div><div class="inicio-autor">Desenvolvido por Romney Souza</div></div></div>
+<div id="listaProdutos"><div class="status-vazio"><div class="inicio-icone"><img src="icon-192.png" alt="Conferidor NF-e" width="92" height="92" style="display:block;margin:0 auto"></div><div class="inicio-titulo">Conferidor NF-e Portátil</div><div class="inicio-sub">Importe seu arquivo XML pelo botão verde abaixo para começar.</div><div id="xmlsLojaInicio" class="xmls-box"></div><div class="inicio-autor">Desenvolvido por Romney Souza</div></div></div>
 
 <div id="bloqueio-tela">
   <h1 id="blq-titulo"></h1>
@@ -254,9 +282,10 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 </div>
 
 <!-- Para saber qual arquivo o celular está usando, altere o número da versão abaixo a cada atualização. -->
-<div id="versaoApp">Versão 6 · 28/10/2026</div>
+<div id="versaoApp">Versão 7 · 02/11/2026</div>
 <div class="botoes-acao">
   <button class="btn btn-secondary" onclick="document.getElementById('xmlInput').click()">Importar XML</button>
+  <button class="btn btn-nuvem" onclick="abrirXmlsLoja()">XMLs da loja</button>
   <button class="btn btn-warning" onclick="abrirMemoria()">Memória</button>
   <button class="btn btn-secondary" onclick="abrirListaSalvas()">Salvas</button>
   <button class="btn btn-danger" onclick="limparConferencia()">Limpar Tudo</button>
@@ -264,6 +293,13 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 </div>
 <input type="file" id="xmlInput" accept=".xml,text/xml" multiple>
 
+<div id="modalXmls" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head blue">☁ XMLs DA LOJA</div>
+    <div class="modal-body"><div id="xmlsLojaModal" class="xmls-box"></div></div>
+    <div class="modal-actions"><button class="modal-cancel" onclick="fecharXmlsLoja()">Fechar</button></div>
+  </div>
+</div>
 <div id="modalDialogo" class="modal-overlay">
   <div class="modal-box">
     <div id="dlgHead" class="modal-head blue">Aviso</div>
@@ -456,20 +492,29 @@ function renderAbas() {
 }
 
 $('xmlInput').addEventListener('change', async e => {
-  initAudio();
   const files = [...e.target.files];
-  if (!files.length) return;
+  e.target.value = '';
+  await importarXmls(files.map(f => ({ nome: f.name, texto: async () => {
+    const buf = await f.arrayBuffer();
+    let txt = new TextDecoder('utf-8').decode(buf);
+    if (/encoding=["']iso-8859-1["']/i.test(txt.slice(0, 200))) txt = new TextDecoder('iso-8859-1').decode(buf);
+    return txt;
+  } })));
+});
+
+// lista = [{ nome, texto: async () => conteúdo do XML }]
+async function importarXmls(lista) {
+  initAudio();
+  if (!lista.length) return;
   if(B.notas.length&&B.finalizada&&B.whatsAppCompartilhado){arquivarConferenciaAtual(true);idConferenciaAtual=null;B={notas:[],ativa:-1};S=novaS();salvar();renderTudo();}
   else if(B.notas.length){const continuar=await confirmar('Já existe uma conferência aberta. O que deseja fazer?',{sim:'Continuar e adicionar',nao:'Iniciar nova (a atual fica salva)'});if(!continuar){arquivarConferenciaAtual(false);idConferenciaAtual=null;B={notas:[],ativa:-1};S=novaS();salvar();renderTudo();}}
   const msgs = []; let primeira = -1, semGtin = 0;
   const novasNotas = [];
-  for (const f of files) {
+  for (const f of lista) {
     try {
-      const buf = await f.arrayBuffer();
-      let txt = new TextDecoder('utf-8').decode(buf);
-      if (/encoding=["']iso-8859-1["']/i.test(txt.slice(0, 200))) txt = new TextDecoder('iso-8859-1').decode(buf);
+      const txt = await f.texto();
       const nt = { ...lerXML(txt), ocorr: [] };
-      if (nt.nota.chave && B.notas.some(x => x.nota.chave === nt.nota.chave)) { msgs.push(f.name + ': esta nota já foi importada.'); continue; }
+      if (nt.nota.chave && B.notas.some(x => x.nota.chave === nt.nota.chave)) { msgs.push(f.nome + ': esta nota já foi importada.'); continue; }
       aplicarMemoriaNaNota(nt);
       B.notas.push(nt);
       const ni = B.notas.length - 1;
@@ -478,10 +523,9 @@ $('xmlInput').addEventListener('change', async e => {
       semGtin += Object.values(nt.itens).filter(i => i.manual).length;
     } catch (err) {
       console.error(err);
-      msgs.push(f.name + ': ' + (err.message || 'não foi possível ler o XML.'));
+      msgs.push(f.nome + ': ' + (err.message || 'não foi possível ler o XML.'));
     }
   }
-  e.target.value = '';
   if (primeira >= 0) {
     B.ativa = primeira; S = B.notas[B.ativa];
     itensEmRevisao = [];
@@ -490,7 +534,7 @@ $('xmlInput').addEventListener('change', async e => {
   }
   if (semGtin) msgs.push(semGtin + ' item(ns) SEM GTIN não podem ser lidos pela câmera.\nConfira-os com os botões + e − na lista.');
   if (msgs.length) avisar(msgs.join('\n'));
-});
+}
 
 
 /* ---------- Renderização ---------- */
@@ -632,7 +676,7 @@ function itemHTML(id){
 }
 function renderLista(){
   const arr=todosItens();
-  $('listaProdutos').innerHTML=arr.length ? arr.map(x=>itemHTML(x.id)).join('') : '<div class="status-vazio"><div class="inicio-icone"><img src="icon-192.png" alt="Conferidor NF-e" width="92" height="92" style="display:block;margin:0 auto"></div><div class="inicio-titulo">Conferidor NF-e Portátil</div><div class="inicio-sub">Importe seu arquivo XML pelo botão verde abaixo para começar.</div><div class="inicio-autor">Desenvolvido por Romney Souza</div></div>';
+  $('listaProdutos').innerHTML=arr.length ? arr.map(x=>itemHTML(x.id)).join('') : '<div class="status-vazio"><div class="inicio-icone"><img src="icon-192.png" alt="Conferidor NF-e" width="92" height="92" style="display:block;margin:0 auto"></div><div class="inicio-titulo">Conferidor NF-e Portátil</div><div class="inicio-sub">Importe seu arquivo XML pelo botão verde abaixo para começar.</div><div id="xmlsLojaInicio" class="xmls-box"></div><div class="inicio-autor">Desenvolvido por Romney Souza</div></div>';
 }
 function atualizarItem(id,destacar=false){
   const el=[...document.querySelectorAll('.produto-item')].find(e=>e.dataset.k===id);
@@ -668,7 +712,7 @@ function renderResumo(){
   if(filtro) filtro.addEventListener('change',renderLista);
 }
 
-function renderTudo(){renderResumo();renderLista();}
+function renderTudo(){renderResumo();renderLista();renderXmlsLoja();}
 
 /* ---------- Ajuste manual ---------- */
 $('listaProdutos').addEventListener('click',async e=>{
@@ -1168,6 +1212,202 @@ function validadeInfoHTML(p){
   const venc=l.some(o=>o.status==='VENCIDO');
   return '<div class="val-info'+(venc?' venc':'')+'">'+(venc?'⛔':'⏳')+' '+l.map(o=>'Lote '+esc(o.l)+': '+(o.status==='VENCIDO'?'VENCIDO em ':'vence ')+esc(fmtVal(o.v))).join(' · ')+'</div>';
 }
+
+/* ---------- XMLs da loja (Google Drive) ---------- */
+const XML_CFG = {
+  CLIENT_ID: '626077896582-3n9nfv0vvme32qonv6gll3md44fhuams.apps.googleusercontent.com',
+  URL: 'https://script.google.com/macros/s/AKfycbzey0F2nL7EaqZ6F6q5nRqRYZQYevrGf4wYiJXarq1RTLItQJdNODtEra6YNQkreZiH/exec'
+};
+const XML_CHAVE = 'conferidor_xml_sessao';
+// restauracao: 0 = não tentou, 1 = tentando, 2 = falhou (sem rede)
+const XMLS = { usuario: null, lojas: null, carregando: false, erro: '', msgLogin: '', googleOk: false, restauracao: 0, carregadoEm: 0, rodadas: 0, tentativasGsi: 0 };
+
+function xmlSessao() { try { return localStorage.getItem(XML_CHAVE) || ''; } catch (e) { return ''; } }
+function xmlGuardar(t) { try { localStorage.setItem(XML_CHAVE, t); } catch (e) {} }
+function xmlLimpar() { try { localStorage.removeItem(XML_CHAVE); } catch (e) {} }
+
+async function xmlChamar(acao, dados) {
+  let resp;
+  try {
+    const r = await fetch(XML_CFG.URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ acao: acao }, dados || {}))
+    });
+    resp = await r.json();
+  } catch (e) {
+    resp = { ok: false, codigo: 'rede', mensagem: 'Sem conexão com o servidor. Confira o Wi-Fi e tente de novo.' };
+  }
+  if (resp && resp.codigo === 'sessao_invalida') {
+    xmlLimpar(); XMLS.usuario = null; XMLS.lojas = null; XMLS.msgLogin = resp.mensagem || '';
+  }
+  return resp;
+}
+
+function xmlData(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? m[3] + '/' + m[2] + '/' + m[1].slice(2) : 'sem data'; }
+function xmlMoeda(v) { return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function xmlTexto(box, msg, classe) { const d = document.createElement('div'); d.className = 'xmls-texto' + (classe ? ' ' + classe : ''); d.textContent = msg; box.appendChild(d); return d; }
+
+function renderXmlsLoja() {
+  ['xmlsLojaInicio', 'xmlsLojaModal'].map(id => $(id)).filter(Boolean).forEach(montarXmlsLoja);
+  xmlAutoCarregar();
+}
+
+function montarXmlsLoja(box) {
+  box.textContent = '';
+  const titulo = document.createElement('div'); titulo.className = 'xmls-titulo'; titulo.textContent = 'XMLs da loja';
+  box.appendChild(titulo);
+
+  if (!XMLS.usuario) {
+    if (XMLS.carregando) { xmlTexto(box, 'Verificando acesso...'); return; }
+    if (xmlSessao() && XMLS.restauracao === 2) {
+      xmlTexto(box, 'Não foi possível confirmar o seu acesso (sem conexão).', 'xmls-erro');
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'xmls-tentar'; b.textContent = 'Tentar de novo';
+      b.onclick = () => { XMLS.restauracao = 0; renderXmlsLoja(); };
+      box.appendChild(b);
+      return;
+    }
+    xmlTexto(box, 'Entre com o Google para ver os XMLs enviados pela matriz.');
+    if (XMLS.msgLogin) xmlTexto(box, XMLS.msgLogin, 'xmls-erro');
+    const g = document.createElement('div'); g.className = 'xmls-google'; box.appendChild(g);
+    xmlBotaoGoogle(g);
+    return;
+  }
+
+  const u = XMLS.usuario;
+  const topo = document.createElement('div'); topo.className = 'xmls-topo';
+  const quem = document.createElement('div'); quem.className = 'xmls-quem';
+  quem.textContent = u.nome + ' · ' + (u.perfil === 'admin' ? 'todas as lojas' : u.loja);
+  const acoes = document.createElement('div'); acoes.className = 'xmls-acoes';
+  const bAtu = document.createElement('button'); bAtu.type = 'button'; bAtu.textContent = 'Atualizar'; bAtu.disabled = XMLS.carregando;
+  bAtu.onclick = () => { XMLS.erro = ''; xmlCarregar(true); };
+  const bSair = document.createElement('button'); bSair.type = 'button'; bSair.textContent = 'Sair'; bSair.onclick = xmlSair;
+  acoes.append(bAtu, bSair); topo.append(quem, acoes); box.appendChild(topo);
+
+  if (XMLS.carregando && !XMLS.lojas) { xmlTexto(box, 'Carregando XMLs...'); return; }
+  if (XMLS.erro) xmlTexto(box, XMLS.erro, 'xmls-erro');
+  if (!XMLS.lojas) return;
+  if (XMLS.carregando) xmlTexto(box, 'Atualizando...');
+
+  let total = 0;
+  XMLS.lojas.forEach(l => {
+    if (u.perfil === 'admin' || XMLS.lojas.length > 1) {
+      const h = document.createElement('div'); h.className = 'xmls-loja'; h.textContent = l.loja; box.appendChild(h);
+    }
+    if (l.erro) xmlTexto(box, l.erro, 'xmls-erro');
+    (l.arquivos || []).forEach(a => { total++; box.appendChild(xmlLinha(a)); });
+    if (l.maisArquivos) xmlTexto(box, 'Há mais XMLs sendo preparados. Toque em Atualizar.');
+  });
+  if (!total && !XMLS.erro) xmlTexto(box, 'Nenhum XML disponível no momento.');
+}
+
+function xmlLinha(a) {
+  const row = document.createElement('div'); row.className = 'xml-linha';
+  const topo = document.createElement('div'); topo.className = 'xml-topo';
+  const nome = document.createElement('div'); nome.className = 'xml-nome'; nome.textContent = 'NF ' + a.numero + ' · ' + xmlData(a.emissao);
+  const badge = document.createElement('span');
+  badge.className = 'xml-badge ' + (a.status === 'CONFERIDO' ? 'ok' : a.status === 'EM CONFERÊNCIA' ? 'andamento' : 'pend');
+  badge.textContent = a.status === 'CONFERIDO' ? 'CONFERIDO' + (a.por ? ' POR ' + String(a.por).toUpperCase() : '') : a.status;
+  topo.append(nome, badge);
+  const meta = document.createElement('div'); meta.className = 'xml-meta';
+  meta.textContent = (a.emitente || 'Emitente não informado') + ' · ' + xmlMoeda(a.valor);
+  row.append(topo, meta);
+  if (a.aviso) { const av = document.createElement('div'); av.className = 'xml-aviso'; av.textContent = '⚠ ' + a.aviso; row.appendChild(av); }
+  const jaNaConferencia = !!a.chave && B.notas.some(n => n.nota && n.nota.chave === a.chave);
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'xml-btn';
+  if (a.status === 'CONFERIDO') { btn.textContent = 'Já conferido'; btn.disabled = true; }
+  else if (jaNaConferencia) { btn.textContent = 'Já está nesta conferência'; btn.disabled = true; }
+  else { btn.textContent = 'Importar'; btn.onclick = () => xmlImportar(a, btn); }
+  row.appendChild(btn);
+  return row;
+}
+
+function xmlBotaoGoogle(alvo) {
+  if (!(window.google && google.accounts && google.accounts.id)) {
+    alvo.textContent = 'Carregando login do Google...';
+    if (++XMLS.tentativasGsi < 40) setTimeout(() => { if (alvo.isConnected && !XMLS.usuario) xmlBotaoGoogle(alvo); }, 400);
+    else alvo.textContent = 'Não foi possível carregar o login do Google. Verifique a internet.';
+    return;
+  }
+  if (!XMLS.googleOk) {
+    google.accounts.id.initialize({ client_id: XML_CFG.CLIENT_ID, callback: xmlAoReceberCredencial, auto_select: false });
+    XMLS.googleOk = true;
+  }
+  alvo.textContent = '';
+  google.accounts.id.renderButton(alvo, { theme: 'filled_blue', size: 'large', text: 'signin_with', shape: 'pill', locale: 'pt-BR' });
+}
+
+async function xmlAoReceberCredencial(resp) {
+  XMLS.msgLogin = ''; XMLS.carregando = true; renderXmlsLoja();
+  const r = await xmlChamar('login', { idToken: resp.credential });
+  XMLS.carregando = false;
+  if (!r.ok) { XMLS.msgLogin = r.mensagem || 'Acesso negado.'; renderXmlsLoja(); return; }
+  xmlGuardar(r.sessao); XMLS.usuario = r.usuario; XMLS.restauracao = 0; XMLS.lojas = null; XMLS.carregadoEm = 0;
+  renderXmlsLoja();
+}
+
+async function xmlRestaurar() {
+  XMLS.restauracao = 1; XMLS.carregando = true; renderXmlsLoja();
+  const r = await xmlChamar('eu', { sessao: xmlSessao() });
+  XMLS.carregando = false;
+  if (r.ok) { XMLS.usuario = r.usuario; XMLS.restauracao = 0; }
+  else XMLS.restauracao = (r.codigo === 'rede' ? 2 : 0);
+  renderXmlsLoja();
+}
+
+async function xmlCarregar(forcar) {
+  if (XMLS.carregando) return;
+  XMLS.carregando = true; XMLS.erro = ''; renderXmlsLoja();
+  const r = await xmlChamar('listarXml', { sessao: xmlSessao(), forcar: !!forcar });
+  XMLS.carregando = false;
+  if (r.ok) {
+    XMLS.lojas = r.lojas; XMLS.carregadoEm = Date.now();
+    // Se ainda há XMLs novos para arrumar, pede de novo (até 4 vezes)
+    if (r.lojas.some(l => l.maisArquivos) && ++XMLS.rodadas <= 4) { setTimeout(() => xmlCarregar(false), 300); } else { XMLS.rodadas = 0; }
+  } else if (r.codigo !== 'sessao_invalida') {
+    XMLS.erro = r.mensagem || 'Não foi possível carregar a lista.';
+  }
+  renderXmlsLoja();
+}
+
+// Carrega sozinho quando a seção está à vista (tela inicial ou janela aberta)
+function xmlAutoCarregar() {
+  if (XMLS.carregando) return;
+  const modalAberto = $('modalXmls') && $('modalXmls').style.display === 'flex';
+  if (!($('xmlsLojaInicio') || modalAberto)) return;
+  if (!XMLS.usuario) { if (xmlSessao() && XMLS.restauracao === 0) xmlRestaurar(); return; }
+  if (!XMLS.erro && Date.now() - XMLS.carregadoEm > 30000) xmlCarregar(false);
+}
+
+async function xmlImportar(a, btn) {
+  initAudio();
+  if (a.status === 'EM CONFERÊNCIA') {
+    const ok = await confirmar('Esta nota já está em conferência. Importar mesmo assim?', { sim: 'Importar', nao: 'Cancelar' });
+    if (!ok) return;
+  }
+  btn.disabled = true; btn.textContent = 'Baixando...';
+  const r = await xmlChamar('ler', { sessao: xmlSessao(), id: a.id });
+  if (!r.ok) { renderXmlsLoja(); avisar(r.mensagem || 'Não foi possível baixar o XML.'); return; }
+  fecharXmlsLoja();
+  await importarXmls([{ nome: r.nome, texto: async () => r.conteudo }]);
+  renderXmlsLoja();
+}
+
+function xmlSair() {
+  xmlLimpar(); XMLS.usuario = null; XMLS.lojas = null; XMLS.msgLogin = ''; XMLS.restauracao = 0; XMLS.carregadoEm = 0;
+  try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+  renderXmlsLoja();
+}
+
+function abrirXmlsLoja() {
+  $('modalXmls').style.display = 'flex';
+  XMLS.erro = ''; if (XMLS.restauracao === 2) XMLS.restauracao = 0;
+  XMLS.carregadoEm = 0;           // força recarregar ao abrir
+  renderXmlsLoja();
+}
+function fecharXmlsLoja() { $('modalXmls').style.display = 'none'; }
+
+renderXmlsLoja();
 </script>
 </body>
 </html>
