@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do administrador · Conferidor NF-e</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f1f5f9;color:#0f172a;line-height:1.4;padding-bottom:40px}
+  .topo{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+  .topo img{width:34px;height:34px;border-radius:8px}
+  .topo h1{font-size:1rem;margin:0;flex:1;min-width:150px}
+  .topo .quem{font-size:.8rem;color:#475569;font-weight:700}
+  .wrap{max-width:940px;margin:0 auto;padding:12px}
+  .card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px}
+  .login{max-width:460px;margin:40px auto 0;text-align:center}
+  .login h2{margin:8px 0 4px;font-size:1.15rem}
+  .login p{color:#475569;font-size:.9rem}
+  .erro-txt{color:#b91c1c;font-weight:700;font-size:.88rem;margin-top:10px}
+  button{font:inherit;cursor:pointer}
+  .btn{border:0;border-radius:8px;padding:9px 13px;font-weight:700;font-size:.85rem;background:#2563eb;color:#fff}
+  .btn.sec{background:#e2e8f0;color:#0f172a}
+  .btn.perigo{background:#dc2626}
+  .btn.verde{background:#0f766e}
+  .btn:disabled{opacity:.55;cursor:default}
+  .abas{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+  .aba{border:0;border-radius:20px;padding:9px 16px;font-weight:800;font-size:.85rem;background:#e2e8f0;color:#334155;white-space:nowrap}
+  .aba.ativa{background:#2563eb;color:#fff}
+  .filtros{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .filtros .cheio{grid-column:1/-1}
+  select,input[type=text],input[type=email],input[type=search]{width:100%;padding:10px;border:2px solid #cbd5e1;border-radius:8px;font:inherit;font-size:.9rem;background:#fff}
+  label{display:block;font-size:.72rem;font-weight:800;color:#64748b;text-transform:uppercase;margin:10px 0 3px}
+  .barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  .contador{font-size:.8rem;color:#64748b;flex:1;min-width:140px}
+  .linha{border-top:1px solid #e2e8f0;padding:11px 0}
+  .linha:first-child{border-top:0}
+  .l-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .l-nome{font-weight:800;font-size:.95rem}
+  .l-loja{font-size:.75rem;color:#0f766e;font-weight:800}
+  .l-meta{font-size:.78rem;color:#64748b;margin-top:2px;overflow-wrap:anywhere}
+  .l-aviso{font-size:.74rem;color:#b45309;font-weight:700;margin-top:3px}
+  .l-acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .badge{font-size:.66rem;font-weight:800;padding:3px 8px;border-radius:10px;text-align:center;line-height:1.2}
+  .b-pend{background:#fef3c7;color:#92400e}
+  .b-and{background:#dbeafe;color:#1d4ed8}
+  .b-ok{background:#dcfce7;color:#166534}
+  .b-dup{background:#ede9fe;color:#5b21b6}
+  .b-inv,.b-rem{background:#fee2e2;color:#991b1b}
+  .b-ativo{background:#dcfce7;color:#166534}
+  .b-inativo{background:#e2e8f0;color:#475569}
+  .vazio{color:#64748b;font-size:.9rem;padding:14px 0;text-align:center}
+  .reg-q{font-size:.72rem;color:#64748b}
+  .reg-a{font-weight:800;font-size:.88rem}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100;align-items:center;justify-content:center;padding:14px}
+  .caixa{background:#fff;border-radius:12px;width:100%;max-width:440px;max-height:92vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .caixa h3{margin:0;padding:14px 16px;font-size:1rem;color:#fff;background:#2563eb;border-radius:12px 12px 0 0}
+  .caixa h3.perigo{background:#dc2626}
+  .caixa .corpo{padding:14px 16px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.92rem}
+  .caixa .form{padding:6px 16px 4px}
+  .caixa .acoes{display:flex;gap:8px;padding:12px 16px 16px;justify-content:flex-end}
+  .caixa .acoes .btn{flex:1}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;font-size:.88rem;z-index:200;max-width:90vw;text-align:center;display:none}
+  .versao{text-align:center;color:#94a3b8;font-size:.7rem;margin-top:16px}
+  @media (min-width:700px){.filtros{grid-template-columns:200px 200px 1fr}.filtros .cheio{grid-column:auto}}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="dlg" class="overlay"><div class="caixa">
+  <h3 id="dlgTitulo">Aviso</h3>
+  <div id="dlgCorpo" class="corpo"></div>
+  <div class="acoes"><button id="dlgNao" class="btn sec">Cancelar</button><button id="dlgSim" class="btn">OK</button></div>
+</div></div>
+
+<div id="frm" class="overlay"><div class="caixa">
+  <h3 id="frmTitulo">Funcionário</h3>
+  <div class="form">
+    <label for="fNome">Nome</label><input id="fNome" type="text" autocomplete="off" maxlength="60">
+    <label for="fEmail">Gmail</label><input id="fEmail" type="email" autocomplete="off" maxlength="120">
+    <label for="fLojaSel">Loja</label><select id="fLojaSel"></select>
+    <label for="fSit">Situação</label><select id="fSit"><option>Ativo</option><option>Inativo</option></select>
+    <div id="frmErro" class="erro-txt"></div>
+  </div>
+  <div class="acoes"><button id="frmCancelar" class="btn sec">Cancelar</button><button id="frmSalvar" class="btn">Salvar</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+// ===== Configuração (valores públicos, iguais aos do Conferidor) =====
+const CFG = {
+  CLIENT_ID: '626077896582-3n9nfv0vvme32qonv6gll3md44fhuams.apps.googleusercontent.com',
+  URL: 'https://script.google.com/macros/s/AKfycbzey0F2nL7EaqZ6F6q5nRqRYZQYevrGf4wYiJXarq1RTLItQJdNODtEra6YNQkreZiH/exec'
+};
+const CHAVE = 'conferidor_admin_sessao';
+const $ = id => document.getElementById(id);
+
+const S = {
+  usuario: null, aba: 'xml', msgLogin: '', googleOk: false, tentativasGsi: 0,
+  xml: { arquivos: [], total: 0, lojas: [], carregado: false, erro: '' },
+  func: { lista: [], lojas: [], carregado: false, erro: '' },
+  reg: { linhas: [], carregado: false, erro: '' },
+  editandoLinha: 0
+};
+
+/* ---------- utilidades ---------- */
+function sessao() { try { return localStorage.getItem(CHAVE) || ''; } catch (e) { return ''; } }
+function guardar(t) { try { localStorage.setItem(CHAVE, t); } catch (e) {} }
+function limpar() { try { localStorage.removeItem(CHAVE); } catch (e) {} }
+function el(tag, classe, texto) { const e = document.createElement(tag); if (classe) e.className = classe; if (texto != null) e.textContent = texto; return e; }
+function fmtData(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? m[3] + '/' + m[2] + '/' + m[1].slice(2) : 'sem data'; }
+function fmtHora(s) { const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/.exec(s || ''); return m ? m[3] + '/' + m[2] + ' ' + m[4] + ':' + m[5] : (s || '—'); }
+function moeda(v) { return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+let toastT = null;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => { t.style.display = 'none'; }, 3800); }
+
+async function api(acao, dados) {
+  let resp;
+  try {
+    const r = await fetch(CFG.URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ acao: acao, sessao: sessao() }, dados || {})) });
+    resp = await r.json();
+  } catch (e) {
+    resp = { ok: false, codigo: 'rede', mensagem: 'Sem conexão com o servidor. Confira a internet e tente de novo.' };
+  }
+  if (resp && resp.codigo === 'sessao_invalida') { limpar(); S.usuario = null; S.msgLogin = resp.mensagem || ''; render(); }
+  return resp;
+}
+
+/* ---------- janelas (no lugar de alert/confirm) ---------- */
+let dlgFila = Promise.resolve();
+function dialogo(op) {
+  const rodar = () => new Promise(res => {
+    $('dlgTitulo').textContent = op.titulo || (op.nao ? 'Confirmar' : 'Aviso');
+    $('dlgTitulo').className = op.perigo ? 'perigo' : '';
+    $('dlgCorpo').textContent = op.msg || '';
+    $('dlgSim').textContent = op.sim || 'OK';
+    $('dlgSim').className = 'btn' + (op.perigo ? ' perigo' : '');
+    $('dlgNao').textContent = op.nao || '';
+    $('dlgNao').style.display = op.nao ? 'block' : 'none';
+    const fim = v => { $('dlg').style.display = 'none'; $('dlgSim').onclick = null; $('dlgNao').onclick = null; res(v); };
+    $('dlgSim').onclick = () => fim(true);
+    $('dlgNao').onclick = () => fim(false);
+    $('dlg').style.display = 'flex';
+  });
+  const p = dlgFila.then(rodar); dlgFila = p.catch(() => {}); return p;
+}
+function avisar(msg, titulo) { return dialogo({ msg: msg, titulo: titulo }).then(() => {}); }
+function confirmar(msg, op) { return dialogo(Object.assign({ msg: msg, nao: 'Cancelar' }, op || {})); }
+
+/* ---------- login ---------- */
+function botaoGoogle(alvo) {
+  if (!(window.google && google.accounts && google.accounts.id)) {
+    alvo.textContent = 'Carregando login do Google...';
+    if (++S.tentativasGsi < 40) setTimeout(() => { if (alvo.isConnected && !S.usuario) botaoGoogle(alvo); }, 400);
+    else alvo.textContent = 'Não foi possível carregar o login do Google. Verifique a internet.';
+    return;
+  }
+  if (!S.googleOk) { google.accounts.id.initialize({ client_id: CFG.CLIENT_ID, callback: aoReceberCredencial, auto_select: false }); S.googleOk = true; }
+  alvo.textContent = '';
+  google.accounts.id.renderButton(alvo, { theme: 'filled_blue', size: 'large', text: 'signin_with', shape: 'pill', locale: 'pt-BR' });
+}
+
+async function aoReceberCredencial(resp) {
+  S.msgLogin = 'Verificando...'; render();
+  const r = await api('login', { idToken: resp.credential, sessao: '' });
+  if (!r.ok) { S.msgLogin = r.mensagem || 'Acesso negado.'; render(); return; }
+  if (!r.usuario || r.usuario.perfil !== 'admin') {
+    S.msgLogin = 'Esta página é somente para o administrador.'; limpar(); render(); return;
+  }
+  guardar(r.sessao); S.usuario = r.usuario; S.msgLogin = ''; S.aba = 'xml';
+  render(); abrirAba('xml', true);
+}
+
+async function restaurar() {
+  if (!sessao()) return;
+  const r = await api('eu');
+  if (r.ok && r.usuario && r.usuario.perfil === 'admin') { S.usuario = r.usuario; render(); abrirAba(S.aba, true); }
+  else if (!r.ok && r.codigo === 'rede') { S.msgLogin = r.mensagem; render(); }
+  else { limpar(); S.usuario = null; render(); }
+}
+
+function sair() {
+  limpar(); S.usuario = null; S.msgLogin = '';
+  S.xml.carregado = S.func.carregado = S.reg.carregado = false;
+  try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+  render();
+}
+
+/* ---------- estrutura da página ---------- */
+function render() {
+  const app = $('app'); app.textContent = '';
+  if (!S.usuario) { app.appendChild(telaLogin()); return; }
+  app.appendChild(telaPainel());
+}
+
+function telaLogin() {
+  const w = el('div', 'wrap');
+  const c = el('div', 'card login');
+  const img = el('img'); img.src = 'icon-192.png'; img.alt = ''; img.width = 64; img.height = 64; img.style.borderRadius = '14px'; img.onerror = () => img.remove();
+  c.append(img, el('h2', null, 'Painel do administrador'), el('p', null, 'Entre com o Gmail de administrador para gerenciar funcionários e XMLs das lojas.'));
+  const g = el('div'); g.id = 'btnGoogle'; g.style.cssText = 'min-height:44px;display:flex;justify-content:center;margin-top:12px'; c.appendChild(g);
+  if (S.msgLogin) c.appendChild(el('div', 'erro-txt', S.msgLogin));
+  w.appendChild(c); w.appendChild(el('div', 'versao', 'Painel v1 · 08/11/2026'));
+  setTimeout(() => botaoGoogle(g), 0);
+  return w;
+}
+
+function telaPainel() {
+  const frag = document.createDocumentFragment();
+  const topo = el('div', 'topo');
+  const img = el('img'); img.src = 'icon-192.png'; img.alt = ''; img.onerror = () => img.remove();
+  const bSair = el('button', 'btn sec', 'Sair'); bSair.onclick = sair;
+  topo.append(img, el('h1', null, 'Painel do administrador'), el('span', 'quem', S.usuario.nome), bSair);
+  frag.appendChild(topo);
+
+  const w = el('div', 'wrap');
+  const abas = el('div', 'abas');
+  [['xml', 'XMLs'], ['func', 'Funcionários'], ['reg', 'Registro']].forEach(([id, nome]) => {
+    const b = el('button', 'aba' + (S.aba === id ? ' ativa' : ''), nome); b.dataset.aba = id; b.onclick = () => abrirAba(id, false);
+    abas.appendChild(b);
+  });
+  w.appendChild(abas);
+  w.append(secaoXml(), secaoFunc(), secaoReg());
+  w.appendChild(el('div', 'versao', 'Painel v1 · 08/11/2026'));
+  frag.appendChild(w);
+  setTimeout(() => { mostrarAba(); desenharXml(); desenharFunc(); desenharReg(); }, 0);
+  return frag;
+}
+
+function mostrarAba() {
+  ['xml', 'func', 'reg'].forEach(id => { const s = $('sec-' + id); if (s) s.style.display = S.aba === id ? 'block' : 'none'; });
+  document.querySelectorAll('.aba').forEach(b => b.classList.toggle('ativa', b.dataset.aba === S.aba));
+}
+
+function abrirAba(id, forcar) {
+  S.aba = id; mostrarAba();
+  if (id === 'xml' && (forcar || !S.xml.carregado)) carregarXml();
+  if (id === 'func' && (forcar || !S.func.carregado)) carregarFunc();
+  if (id === 'reg' && (forcar || !S.reg.carregado)) carregarReg();
+}
+
+/* ---------- aba XMLs ---------- */
+function secaoXml() {
+  const sec = el('div'); sec.id = 'sec-xml';
+  const card = el('div', 'card');
+  const f = el('div', 'filtros');
+  const sLoja = el('select'); sLoja.id = 'fLoja'; sLoja.innerHTML = '<option value="">Todas as lojas</option>';
+  const sSt = el('select'); sSt.id = 'fStatus';
+  [['', 'Todos os status'], ['PENDENTE', 'PENDENTE'], ['EM CONFERÊNCIA', 'EM CONFERÊNCIA'], ['CONFERIDO', 'CONFERIDO'], ['DUPLICADO', 'DUPLICADO'], ['INVÁLIDO', 'INVÁLIDO'], ['REMOVIDO', 'REMOVIDO']]
+    .forEach(([v, t]) => { const o = el('option', null, t); o.value = v; sSt.appendChild(o); });
+  const busca = el('input'); busca.type = 'search'; busca.id = 'fBusca'; busca.placeholder = 'Buscar por número da NF ou emitente'; busca.className = 'cheio';
+  f.append(sLoja, sSt, busca);
+  let t = null;
+  sLoja.onchange = sSt.onchange = () => carregarXml();
+  busca.oninput = () => { clearTimeout(t); t = setTimeout(carregarXml, 350); };
+  const barra = el('div', 'barra');
+  const cont = el('div', 'contador'); cont.id = 'xmlContador';
+  const bAtu = el('button', 'btn sec', 'Atualizar'); bAtu.id = 'bAtualizarXml'; bAtu.onclick = () => carregarXml();
+  const bSync = el('button', 'btn verde', 'Arrumar pastas agora'); bSync.id = 'bSync'; bSync.onclick = arrumar;
+  barra.append(cont, bAtu, bSync);
+  const lista = el('div'); lista.id = 'xmlLista';
+  card.append(f, barra, lista); sec.appendChild(card);
+  return sec;
+}
+
+async function carregarXml() {
+  const dados = { loja: $('fLoja') ? $('fLoja').value : '', status: $('fStatus') ? $('fStatus').value : '', busca: $('fBusca') ? $('fBusca').value.trim() : '' };
+  S.xml.erro = ''; $('xmlContador') && ($('xmlContador').textContent = 'Carregando...');
+  const r = await api('adminListarXml', dados);
+  if (!S.usuario) return;
+  if (r.ok) {
+    S.xml.arquivos = r.arquivos; S.xml.total = r.total; S.xml.carregado = true;
+    const sel = $('fLoja');
+    if (sel && sel.options.length <= 1) r.lojas.forEach(n => { const o = el('option', null, n); o.value = n; sel.appendChild(o); });
+  } else S.xml.erro = r.mensagem || 'Não foi possível carregar a lista.';
+  desenharXml();
+}
+
+const CLASSE_STATUS = { 'PENDENTE': 'b-pend', 'EM CONFERÊNCIA': 'b-and', 'CONFERIDO': 'b-ok', 'DUPLICADO': 'b-dup', 'INVÁLIDO': 'b-inv', 'REMOVIDO': 'b-rem' };
+
+function desenharXml() {
+  const lista = $('xmlLista'); if (!lista) return;
+  lista.textContent = '';
+  const cont = $('xmlContador');
+  if (S.xml.erro) { lista.appendChild(el('div', 'erro-txt', S.xml.erro)); if (cont) cont.textContent = ''; return; }
+  if (cont) cont.textContent = S.xml.carregado ? 'Mostrando ' + S.xml.arquivos.length + ' de ' + S.xml.total + (S.xml.total > S.xml.arquivos.length ? ' (refine os filtros para ver as outras)' : '') : '';
+  if (S.xml.carregado && !S.xml.arquivos.length) { lista.appendChild(el('div', 'vazio', 'Nenhum XML encontrado.')); return; }
+  S.xml.arquivos.forEach(a => lista.appendChild(linhaXml(a)));
+}
+
+function linhaXml(a) {
+  const l = el('div', 'linha');
+  const topo = el('div', 'l-topo');
+  const esq = el('div');
+  esq.append(el('div', 'l-nome', a.numero ? 'NF ' + a.numero + ' · ' + fmtData(a.emissao) : 'Arquivo inválido'), el('div', 'l-loja', a.loja));
+  const txt = (a.status === 'CONFERIDO' || a.status === 'EM CONFERÊNCIA') && a.por ? a.status + ' POR ' + a.por : a.status;
+  topo.append(esq, el('span', 'badge ' + (CLASSE_STATUS[a.status] || 'b-pend'), txt));
+  l.appendChild(topo);
+  if (a.numero) l.appendChild(el('div', 'l-meta', (a.emitente || 'Emitente não informado') + ' · ' + moeda(a.valor)));
+  if (a.aviso) l.appendChild(el('div', 'l-aviso', '⚠ ' + a.aviso));
+  l.appendChild(el('div', 'l-meta', 'Registrado ' + fmtHora(a.registrado) + ' · Atualizado ' + fmtHora(a.atualizado)));
+  const acoes = el('div', 'l-acoes');
+  if (a.status === 'EM CONFERÊNCIA' || a.status === 'CONFERIDO') {
+    const b = el('button', 'btn sec', 'Voltar para PENDENTE'); b.onclick = () => voltarPendente(a); acoes.appendChild(b);
+  }
+  if (a.status !== 'REMOVIDO') {
+    const b = el('button', 'btn perigo', 'Excluir'); b.onclick = () => excluirXml(a); acoes.appendChild(b);
+  }
+  if (acoes.children.length) l.appendChild(acoes);
+  return l;
+}
+
+async function voltarPendente(a) {
+  const quem = a.por ? ' (' + a.por + ')' : '';
+  const msg = a.status === 'CONFERIDO'
+    ? 'A NF ' + a.numero + ' da ' + a.loja + ' já foi CONFERIDA' + quem + '.\nVoltar para PENDENTE permite conferir de novo. Continuar?'
+    : 'A NF ' + a.numero + ' da ' + a.loja + ' está EM CONFERÊNCIA' + quem + '.\nVoltar para PENDENTE tira a nota de quem está com ela. Continuar?';
+  if (!(await confirmar(msg, { sim: 'Voltar para PENDENTE' }))) return;
+  const r = await api('adminStatusXml', { id: a.id, para: 'PENDENTE' });
+  if (!r.ok) { avisar(r.mensagem || 'Não foi possível alterar a nota.'); return; }
+  toast('Nota voltou para PENDENTE.'); carregarXml(); S.reg.carregado = false;
+}
+
+async function excluirXml(a) {
+  const nome = a.numero ? 'a NF ' + a.numero + ' da ' + a.loja : 'este arquivo da ' + a.loja;
+  const extra = a.status === 'EM CONFERÊNCIA' ? '\nAtenção: ' + (a.por || 'alguém') + ' está conferindo esta nota agora.' : '';
+  if (!(await confirmar('Excluir ' + nome + '?\nO arquivo vai para a lixeira do Drive (fica 30 dias) e some das listas.' + extra, { sim: 'Excluir', perigo: true }))) return;
+  const r = await api('adminExcluirXml', { id: a.id });
+  if (!r.ok) { avisar(r.mensagem || 'Não foi possível excluir.'); return; }
+  toast('XML excluído.'); carregarXml(); S.reg.carregado = false;
+}
+
+async function arrumar() {
+  const b = $('bSync'); b.disabled = true; b.textContent = 'Arrumando...';
+  const r = await api('sincronizar');
+  b.disabled = false; b.textContent = 'Arrumar pastas agora';
+  if (!S.usuario) return;
+  if (!r.ok) { avisar(r.mensagem || 'Não foi possível arrumar as pastas.'); return; }
+  const soma = c => r.resumos.reduce((n, x) => n + (x[c] || 0), 0);
+  const partes = [soma('novos') + ' novo(s)', soma('duplicados') + ' duplicado(s)', soma('invalidos') + ' inválido(s)'];
+  if (soma('liberadas')) partes.push(soma('liberadas') + ' liberada(s)');
+  if (soma('restantes')) partes.push(soma('restantes') + ' ainda por arrumar (rode de novo)');
+  toast('Arrumação: ' + partes.join(', ') + '.');
+  carregarXml();
+}
+
+/* ---------- aba Funcionários ---------- */
+function secaoFunc() {
+  const sec = el('div'); sec.id = 'sec-func'; sec.style.display = 'none';
+  const card = el('div', 'card');
+  const barra = el('div', 'barra');
+  const cont = el('div', 'contador'); cont.id = 'funcContador';
+  const bNovo = el('button', 'btn', '+ Novo funcionário'); bNovo.id = 'bNovoFunc'; bNovo.onclick = () => abrirForm(null);
+  barra.append(cont, bNovo);
+  const lista = el('div'); lista.id = 'funcLista';
+  card.append(barra, lista); sec.appendChild(card);
+  return sec;
+}
+
+async function carregarFunc() {
+  const r = await api('adminFuncionarios');
+  if (!S.usuario) return;
+  if (r.ok) { S.func.lista = r.funcionarios; S.func.lojas = r.lojas; S.func.carregado = true; S.func.erro = ''; }
+  else S.func.erro = r.mensagem || 'Não foi possível carregar os funcionários.';
+  desenharFunc();
+}
+
+function desenharFunc() {
+  const lista = $('funcLista'); if (!lista) return;
+  lista.textContent = '';
+  if (S.func.erro) { lista.appendChild(el('div', 'erro-txt', S.func.erro)); return; }
+  $('funcContador').textContent = S.func.carregado ? S.func.lista.length + ' funcionário(s)' : '';
+  if (S.func.carregado && !S.func.lista.length) { lista.appendChild(el('div', 'vazio', 'Nenhum funcionário cadastrado.')); return; }
+  const ord = S.func.lista.slice().sort((a, b) => (a.loja + a.nome).localeCompare(b.loja + b.nome, 'pt-BR'));
+  ord.forEach(f => {
+    const l = el('div', 'linha');
+    const topo = el('div', 'l-topo');
+    const esq = el('div'); esq.append(el('div', 'l-nome', f.nome), el('div', 'l-loja', f.loja));
+    topo.append(esq, el('span', 'badge ' + (f.situacao === 'Ativo' ? 'b-ativo' : 'b-inativo'), f.situacao));
+    l.append(topo, el('div', 'l-meta', f.email));
+    const acoes = el('div', 'l-acoes');
+    const bEd = el('button', 'btn sec', 'Editar'); bEd.onclick = () => abrirForm(f);
+    const bTg = el('button', 'btn ' + (f.situacao === 'Ativo' ? 'perigo' : 'verde'), f.situacao === 'Ativo' ? 'Desativar' : 'Ativar'); bTg.onclick = () => alternarSituacao(f);
+    acoes.append(bEd, bTg); l.appendChild(acoes);
+    lista.appendChild(l);
+  });
+}
+
+function abrirForm(f) {
+  S.editandoLinha = f ? f.linha : 0;
+  $('frmTitulo').textContent = f ? 'Editar funcionário' : 'Novo funcionário';
+  $('fNome').value = f ? f.nome : ''; $('fEmail').value = f ? f.email : '';
+  const sel = $('fLojaSel'); sel.textContent = '';
+  S.func.lojas.forEach(n => { const o = el('option', null, n); o.value = n; sel.appendChild(o); });
+  if (f) sel.value = f.loja;
+  $('fSit').value = f ? f.situacao : 'Ativo';
+  $('frmErro').textContent = ''; $('frmSalvar').disabled = false;
+  $('frm').style.display = 'flex'; setTimeout(() => $('fNome').focus(), 50);
+}
+function fecharForm() { $('frm').style.display = 'none'; }
+$('frmCancelar').onclick = fecharForm;
+$('frmSalvar').onclick = async () => {
+  $('frmErro').textContent = ''; $('frmSalvar').disabled = true;
+  const r = await api('adminSalvarFuncionario', { linha: S.editandoLinha, nome: $('fNome').value, email: $('fEmail').value, loja: $('fLojaSel').value, situacao: $('fSit').value });
+  $('frmSalvar').disabled = false;
+  if (!r.ok) { $('frmErro').textContent = r.mensagem || 'Não foi possível salvar.'; return; }
+  fecharForm(); toast(S.editandoLinha ? 'Funcionário atualizado.' : 'Funcionário cadastrado.'); S.reg.carregado = false; carregarFunc();
+};
+
+async function alternarSituacao(f) {
+  const novo = f.situacao === 'Ativo' ? 'Inativo' : 'Ativo';
+  if (novo === 'Inativo' && !(await confirmar('Desativar ' + f.nome + '?\nEle perde o acesso na hora, mesmo que esteja com o app aberto.', { sim: 'Desativar', perigo: true }))) return;
+  const r = await api('adminSalvarFuncionario', { linha: f.linha, nome: f.nome, email: f.email, loja: f.loja, situacao: novo });
+  if (!r.ok) { avisar(r.mensagem || 'Não foi possível alterar.'); return; }
+  toast(f.nome + (novo === 'Ativo' ? ' foi reativado.' : ' foi desativado.')); S.reg.carregado = false; carregarFunc();
+}
+
+/* ---------- aba Registro ---------- */
+function secaoReg() {
+  const sec = el('div'); sec.id = 'sec-reg'; sec.style.display = 'none';
+  const card = el('div', 'card');
+  const barra = el('div', 'barra');
+  const cont = el('div', 'contador', 'Últimas ações feitas neste painel'); 
+  const bAtu = el('button', 'btn sec', 'Atualizar'); bAtu.onclick = carregarReg;
+  barra.append(cont, bAtu);
+  const lista = el('div'); lista.id = 'regLista';
+  card.append(barra, lista); sec.appendChild(card);
+  return sec;
+}
+
+async function carregarReg() {
+  const r = await api('adminRegistro');
+  if (!S.usuario) return;
+  if (r.ok) { S.reg.linhas = r.linhas; S.reg.carregado = true; S.reg.erro = ''; } else S.reg.erro = r.mensagem || 'Não foi possível carregar o registro.';
+  desenharReg();
+}
+
+function desenharReg() {
+  const lista = $('regLista'); if (!lista) return;
+  lista.textContent = '';
+  if (S.reg.erro) { lista.appendChild(el('div', 'erro-txt', S.reg.erro)); return; }
+  if (S.reg.carregado && !S.reg.linhas.length) { lista.appendChild(el('div', 'vazio', 'Nenhuma ação registrada ainda.')); return; }
+  S.reg.linhas.forEach(x => {
+    const l = el('div', 'linha');
+    l.append(el('div', 'reg-q', fmtHora(x.quando) + ' · ' + x.quem), el('div', 'reg-a', x.acao), el('div', 'l-meta', x.detalhe));
+    lista.appendChild(l);
+  });
+}
+
+/* ---------- início ---------- */
+render();
+restaurar();
+</script>
+</body>
+</html>
