@@ -89,7 +89,7 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 .nf-resumo{font-size:.72rem;color:#64748b;margin-top:2px}
 #listaProdutos{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 2px 90px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #xmlInput{display:none}
-.botoes-acao{z-index:100;flex-wrap:wrap;padding:8px;gap:6px}.botoes-acao .btn{padding:10px 2px;font-size:.72rem;min-width:0;line-height:1.15;overflow-wrap:anywhere}
+.botoes-acao{z-index:100;flex-wrap:wrap;padding:8px 6px;gap:4px}.botoes-acao .btn{padding:10px 1px;font-size:clamp(.58rem,2.7vw,.72rem);min-width:0;line-height:1.15;overflow-wrap:break-word}
 .btn-secondary{background:#2563eb}
 .btn-warning{background:#ca8a04}
 #seletorNF{display:none;position:fixed;inset:0;background:rgba(15,23,42,.7);z-index:10000;align-items:flex-end;justify-content:center;padding:12px}
@@ -191,7 +191,7 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 .xml-linha{border-top:1px solid #e2e8f0;padding:9px 0}
 .xml-topo{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .xml-nome{font-weight:800;font-size:.9rem;color:#0f172a}
-.xml-badge{font-size:.66rem;font-weight:800;padding:3px 7px;border-radius:10px;white-space:nowrap}
+.xml-badge{font-size:.66rem;font-weight:800;padding:3px 7px;border-radius:10px;text-align:center;line-height:1.2}
 .xml-badge.pend{background:#fef3c7;color:#92400e}
 .xml-badge.andamento{background:#dbeafe;color:#1d4ed8}
 .xml-badge.ok{background:#dcfce7;color:#166534}
@@ -282,7 +282,7 @@ input[type=file]{width:100%;padding:10px;border:2px dashed #cbd5e1;border-radius
 </div>
 
 <!-- Para saber qual arquivo o celular está usando, altere o número da versão abaixo a cada atualização. -->
-<div id="versaoApp">Versão 8 · 02/11/2026</div>
+<div id="versaoApp">Versão 9 · 08/11/2026</div>
 <div class="botoes-acao">
   <button class="btn btn-secondary" onclick="document.getElementById('xmlInput').click()">Importar XML</button>
   <button class="btn btn-nuvem" onclick="abrirXmlsLoja()">XMLs da loja</button>
@@ -890,7 +890,7 @@ function onScanSuccess(texto){
 function salvar(sem){try{localStorage.setItem(KEY,JSON.stringify(B));if(!sem)marcarAlteradaSeFinalizada();}catch(e){console.warn('Não foi possível salvar:',e);}}
 window.addEventListener('load',()=>{try{const salvo=localStorage.getItem(KEY);if(!salvo)return;const b=JSON.parse(salvo);if(Array.isArray(b.notas)&&b.notas.length){B=b;B.ativa=Math.min(Math.max(Number(b.ativa)||0,0),b.notas.length-1);S=B.notas[B.ativa];renderTudo();mostrarScanner();}}catch(e){console.error('Erro ao recuperar conferência:',e);localStorage.removeItem(KEY);}});
 async function zerar(){localStorage.removeItem(KEY);idConferenciaAtual=null;B={notas:[],ativa:-1};S=novaS();renderTudo();$('scannerCard').style.display='none';if(scanner){try{await scanner.clear()}catch(e){console.warn(e)}scanner=null;}$('xmlInput').value='';}
-async function limparConferencia(){if(!B.notas.length)return;if(!(await confirmar('Tem certeza que deseja apagar TODAS as notas e a conferência?',{sim:'Apagar',nao:'Cancelar',perigo:true})))return;arquivarConferenciaAtual(!!B.finalizada);idConferenciaAtual=null;await zerar();}
+async function limparConferencia(){if(!B.notas.length)return;if(!(await confirmar('Tem certeza que deseja apagar TODAS as notas e a conferência?',{sim:'Apagar',nao:'Cancelar',perigo:true})))return;xmlEnfileirarLiberar();arquivarConferenciaAtual(!!B.finalizada);idConferenciaAtual=null;await zerar();}
 async function removerNota(ni){const idx=ni==null?B.ativa:ni;if(idx<0||!B.notas[idx])return;if(!(await confirmar(`Remover a NF ${B.notas[idx].nota.numero||''} e sua conferência?`,{sim:'Remover',nao:'Cancelar',perigo:true})))return;B.notas.splice(idx,1);if(!B.notas.length){await zerar();return;}B.ativa=Math.min(idx,B.notas.length-1);S=B.notas[B.ativa];salvar();renderTudo();}
 
 /* ---------- Finalização ---------- */
@@ -1285,7 +1285,7 @@ function montarXmlsLoja(box) {
   bAtu.onclick = () => { XMLS.erro = ''; xmlCarregar(true); };
   const bSair = document.createElement('button'); bSair.type = 'button'; bSair.textContent = 'Sair'; bSair.onclick = xmlSair;
   acoes.append(bAtu, bSair); topo.append(quem, acoes); box.appendChild(topo);
-  const pend = xmlFilaLer().length;
+  const pend = xmlFilaLer().length + xmlFilaLer(XML_FILA_LIB).length;
   if (pend) xmlTexto(box, pend + ' nota(s) aguardando atualizar o status no servidor. Vai tentar de novo sozinho.');
 
   if (XMLS.carregando && !XMLS.lojas) { xmlTexto(box, 'Carregando XMLs...'); return; }
@@ -1311,7 +1311,7 @@ function xmlLinha(a) {
   const nome = document.createElement('div'); nome.className = 'xml-nome'; nome.textContent = 'NF ' + a.numero + ' · ' + xmlData(a.emissao);
   const badge = document.createElement('span');
   badge.className = 'xml-badge ' + (a.status === 'CONFERIDO' ? 'ok' : a.status === 'EM CONFERÊNCIA' ? 'andamento' : 'pend');
-  badge.textContent = a.status === 'CONFERIDO' ? 'CONFERIDO' + (a.por ? ' POR ' + String(a.por).toUpperCase() : '') : a.status;
+  badge.textContent = (a.status === 'CONFERIDO' || a.status === 'EM CONFERÊNCIA') && a.por ? a.status + ' POR ' + String(a.por).toUpperCase() : a.status;
   topo.append(nome, badge);
   const meta = document.createElement('div'); meta.className = 'xml-meta';
   meta.textContent = (a.emitente || 'Emitente não informado') + ' · ' + xmlMoeda(a.valor);
@@ -1387,13 +1387,18 @@ function xmlAutoCarregar() {
 
 async function xmlImportar(a, btn) {
   initAudio();
-  if (a.status === 'EM CONFERÊNCIA') {
-    const ok = await confirmar('Esta nota já está em conferência. Importar mesmo assim?', { sim: 'Importar', nao: 'Cancelar' });
+  const meuNome = XMLS.usuario ? String(XMLS.usuario.nome || '').trim().split(/\s+/)[0].toUpperCase() : '';
+  const eMinha = a.status === 'EM CONFERÊNCIA' && a.por && String(a.por).toUpperCase() === meuNome;
+  if (a.status === 'EM CONFERÊNCIA' && !eMinha) {
+    const ok = await confirmar('Esta nota já está em conferência' + (a.por ? ' por ' + a.por : '') + '. Se continuar, a nota passa para você. Importar mesmo assim?', { sim: 'Importar', nao: 'Cancelar' });
     if (!ok) return;
   }
   btn.disabled = true; btn.textContent = 'Baixando...';
-  const r = await xmlChamar('ler', { sessao: xmlSessao(), id: a.id });
+  let r = await xmlChamar('importarXml', { sessao: xmlSessao(), id: a.id });
+  if (!r.ok && r.codigo === 'acao_desconhecida') r = await xmlChamar('ler', { sessao: xmlSessao(), id: a.id });   // servidor ainda na versão antiga
   if (!r.ok) { renderXmlsLoja(); avisar(r.mensagem || 'Não foi possível baixar o XML.'); return; }
+  xmlFilaGravar(xmlFilaLer(XML_FILA_LIB).filter(id => id !== a.id), XML_FILA_LIB);   // se estava para ser liberada, a nota voltou a ser sua
+  XMLS.carregadoEm = 0;
   fecharXmlsLoja();
   await importarXmls([{ nome: r.nome, texto: async () => r.conteudo, driveId: a.id }]);
   renderXmlsLoja();
@@ -1415,36 +1420,57 @@ function fecharXmlsLoja() { $('modalXmls').style.display = 'none'; }
 
 
 /* ---------- Status CONFERIDO: fila de avisos ao servidor ---------- */
-const XML_FILA = 'conferidor_xml_fila';
+const XML_FILA = 'conferidor_xml_fila';                  // notas a marcar como CONFERIDO (relatório enviado)
+const XML_FILA_LIB = 'conferidor_xml_fila_liberar';       // notas a devolver para PENDENTE ("Limpar Tudo" sem enviar)
 let xmlFilaRodando = false;
-function xmlFilaLer() { try { const a = JSON.parse(localStorage.getItem(XML_FILA) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
-function xmlFilaGravar(a) { try { localStorage.setItem(XML_FILA, JSON.stringify(a)); } catch (e) {} }
+function xmlFilaLer(k) { try { const a = JSON.parse(localStorage.getItem(k || XML_FILA) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function xmlFilaGravar(a, k) { try { localStorage.setItem(k || XML_FILA, JSON.stringify(a)); } catch (e) {} }
+function xmlIdsDoDrive() { return B.notas.map(n => n.driveId).filter(id => /^[A-Za-z0-9_-]{10,100}$/.test(String(id || ''))); }
 
 // Chamada quando o relatório é enviado: as notas que vieram do Drive entram na fila
 function xmlEnfileirarConferidas() {
-  const ids = B.notas.map(n => n.driveId).filter(id => /^[A-Za-z0-9_-]{10,100}$/.test(String(id || '')));
+  const ids = xmlIdsDoDrive();
   if (!ids.length) return;
   xmlFilaGravar([...new Set([...xmlFilaLer(), ...ids])]);
+  xmlFilaGravar(xmlFilaLer(XML_FILA_LIB).filter(id => ids.indexOf(id) < 0), XML_FILA_LIB);
   xmlProcessarFila();
+}
+
+// Chamada em "Limpar Tudo": se o relatório não foi enviado, as notas voltam a PENDENTE
+function xmlEnfileirarLiberar() {
+  if (B.whatsAppCompartilhado) return;
+  const ids = xmlIdsDoDrive();
+  if (!ids.length) return;
+  xmlFilaGravar([...new Set([...xmlFilaLer(XML_FILA_LIB), ...ids])], XML_FILA_LIB);
+  xmlFilaGravar(xmlFilaLer().filter(id => ids.indexOf(id) < 0));
+  xmlProcessarFila();
+}
+
+// Devolve true se esvaziou a fila; false se parou (sem internet, servidor ocupado, sessão vencida...)
+async function xmlProcessarFilaChave(chave, acao) {
+  while (xmlFilaLer(chave).length) {
+    const antes = xmlFilaLer(chave).length;
+    const lote = xmlFilaLer(chave).slice(0, 20);
+    const r = await xmlChamar(acao, { sessao: xmlSessao(), ids: lote });
+    if (!r.ok) {
+      // ID ruim não pode travar a fila para sempre; os outros erros tentam depois
+      if (r.codigo === 'id_invalido') xmlFilaGravar(xmlFilaLer(chave).filter(id => lote.indexOf(id) < 0), chave);
+      return false;
+    }
+    const feitos = (r.resultados || []).map(x => x.id);
+    xmlFilaGravar(xmlFilaLer(chave).filter(id => feitos.indexOf(id) < 0), chave);
+    XMLS.carregadoEm = 0;   // a lista precisa mostrar o novo status
+    if (xmlFilaLer(chave).length >= antes) return false;   // nada saiu da fila: não insiste em loop
+  }
+  return true;
 }
 
 async function xmlProcessarFila() {
   if (xmlFilaRodando || !xmlSessao()) return;
-  if (!xmlFilaLer().length) return;
+  if (!xmlFilaLer().length && !xmlFilaLer(XML_FILA_LIB).length) return;
   xmlFilaRodando = true;
   try {
-    while (xmlFilaLer().length) {
-      const lote = xmlFilaLer().slice(0, 20);
-      const r = await xmlChamar('marcarConferido', { sessao: xmlSessao(), ids: lote });
-      if (!r.ok) {
-        // ID ruim não pode travar a fila para sempre; os outros erros (rede, servidor ocupado, sessão) tentam depois
-        if (r.codigo === 'id_invalido') xmlFilaGravar(xmlFilaLer().filter(id => lote.indexOf(id) < 0));
-        break;
-      }
-      const feitos = (r.resultados || []).map(x => x.id);
-      xmlFilaGravar(xmlFilaLer().filter(id => feitos.indexOf(id) < 0));
-      XMLS.carregadoEm = 0;   // a lista precisa mostrar o novo status
-    }
+    if (await xmlProcessarFilaChave(XML_FILA, 'marcarConferido')) await xmlProcessarFilaChave(XML_FILA_LIB, 'liberarConferencia');
   } finally {
     xmlFilaRodando = false;
     renderXmlsLoja();
